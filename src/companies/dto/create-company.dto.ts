@@ -5,13 +5,13 @@ export class CreateCompanyDto {
 
 
     @IsNotEmpty({
-        message: "Emali không được để trống!",
+        message: "Name không được để trống!",
     })
     name: string;
 
 
     @IsNotEmpty({
-        message: "Password không được để trống!",
+        message: "Address không được để trống!",
     })
     address: string;
 
