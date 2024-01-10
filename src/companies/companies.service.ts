@@ -7,7 +7,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { IUser } from 'src/users/users.interface';
 import mongoose from 'mongoose';
 import aqp from 'api-query-params';
-import { isEmpty } from 'class-validator';
 
 
 @Injectable()
