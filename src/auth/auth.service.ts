@@ -7,13 +7,17 @@ import { RegisterUserDto } from 'src/users/dto/create-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from 'src/users/schemas/user.schema';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
+import { ConfigService } from '@nestjs/config';
+import ms from 'ms';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
     constructor(
         @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
         private readonly usersService: UsersService,
-        private jwtService: JwtService
+        private jwtService: JwtService,
+        private configService: ConfigService
     ) { }
 
     getHashPassword = (password: string) => {
@@ -62,7 +66,7 @@ export class AuthService {
         return null;
     }
 
-    async login(user: IUser) {
+    async login(user: IUser, response: Response) {
         const { _id, name, email, role } = user;
         const payload = {
             sub: "token login",
@@ -72,12 +76,33 @@ export class AuthService {
             email,
             role
         };
+        const refresh_token = this.createRefreshToken(payload);
+
+        // update user with refresh token
+        await this.usersService.updateUserToken(refresh_token, _id);
+
+        // set refresh_token as cookies
+        response.cookie('refresh_token', refresh_token, {
+            httpOnly: true,
+            maxAge: ms(this.configService.get<string>('JWT_REFRESH_EXPRISE'))
+        });
+
         return {
             access_token: this.jwtService.sign(payload),
-            _id,
-            name,
-            email,
-            role
+            user: {
+                _id,
+                name,
+                email,
+                role
+            }
         };
+    }
+
+    createRefreshToken = (payload: any) => {
+        const refresh_token = this.jwtService.sign(payload, {
+            secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
+            expiresIn: ms(this.configService.get<string>('JWT_REFRESH_EXPRISE')) / 1000
+        })
+        return refresh_token;
     }
 }
