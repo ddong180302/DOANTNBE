@@ -20,8 +20,8 @@ export class CreateCompanyDto {
     })
     description: string;
 
-
-    //address: string;
+    @IsNotEmpty({ message: "Logo không được để trống!" })
+    logo: string;
 
     // phone: string;
     // age: number;

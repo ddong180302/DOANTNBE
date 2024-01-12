@@ -13,14 +13,14 @@ import { Public, ResponseMessage } from 'src/decorator/customize';
 export class FilesController {
   constructor(private readonly filesService: FilesService) { }
 
-  @Public()
+
   @ResponseMessage("Upload single file")
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('fileUpload'))
   uploadFile(@UploadedFile(
     new ParseFilePipeBuilder()
       .addFileTypeValidator({
-        fileType: /^(jpg|jpeg|png|application\/pdf|image\/png|gif|txt|pdf|doc|docx|text\/plain)$/i,
+        fileType: /^(jpg|jpeg|image\/jpeg|png|image\/png|pdf|application\/pdf|gif|doc|application\/msword |docx|txt|text\/plain)$/i,
       })
       .addMaxSizeValidator({
         maxSize: 1024 * 1024
