@@ -18,7 +18,10 @@ export class ResumesService {
     const { _id, email } = user;
 
     const newCV = await this.resumeModel.create({
-      url, companyId, jobId,
+      url,
+      companyId,
+      userId: _id,
+      jobId,
       email,
       status: "PENDING",
       createdBy: { _id, email },
@@ -75,10 +78,21 @@ export class ResumesService {
 
   async findByUsers(user: IUser) {
     const { _id } = user;
-    console.log(user);
     return await this.resumeModel.find({
-      "createdBy._id": _id
+      userId: _id
     })
+      .sort("-createdAt")
+      .populate([
+        {
+          path: "companyId",
+          select: { name: 1 }
+        },
+        {
+          path: "jobId",
+          select: { name: 1 }
+        }
+      ])
+
   }
 
   async findOne(_id: string) {

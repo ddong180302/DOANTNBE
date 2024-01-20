@@ -91,13 +91,16 @@ export class UsersService {
 
     return this.userModel.findOne({
       _id: id
-    }).select("-password");
+    })
+      .select("-password")
+      .populate({ path: "role", select: { name: 1, _id: 1 } })
+      ;
   }
 
   findOneByUserName(username: string) {
     return this.userModel.findOne({
       email: username
-    });
+    }).populate({ path: "role", select: { name: 1, permissions: 1 } });
   }
 
   async update(updateUserDto: UpdateUserDto, user: IUser) {
@@ -113,6 +116,11 @@ export class UsersService {
   async remove(id: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(id))
       return "user not found";
+
+    const foundUser = await this.userModel.findById(id);
+    if (foundUser.email === "admin@gmail.com") {
+      throw new BadRequestException("Không thể xóa tài khoản email admin@gmail.com!");
+    }
 
     await this.userModel.updateOne(
       { _id: id },
