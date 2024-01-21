@@ -11,7 +11,9 @@ import aqp from 'api-query-params';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>) { }
+  constructor(
+    @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
+  ) { }
 
   getHashPassword = (password: string) => {
     const salt = genSaltSync(10);
@@ -100,7 +102,12 @@ export class UsersService {
   findOneByUserName(username: string) {
     return this.userModel.findOne({
       email: username
-    }).populate({ path: "role", select: { name: 1, permissions: 1 } });
+    }).populate(
+      {
+        path: "role",
+        select: { name: 1 }
+      }
+    );
   }
 
   async update(updateUserDto: UpdateUserDto, user: IUser) {
@@ -146,5 +153,6 @@ export class UsersService {
 
   findUserByToken = async (refreshToken: string) => {
     return await this.userModel.findOne({ refreshToken })
+      .populate({ path: "role", select: { name: 1 } })
   }
 }
