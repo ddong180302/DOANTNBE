@@ -33,6 +33,11 @@ export class SubscribersService {
     }
   }
 
+  async getSkills(user: IUser) {
+    const { email } = user;
+    return await this.subscriberModel.findOne({ email }, { skills: 1 })
+  }
+
   async findAll(
     currentPage: number,
     limit: number,
@@ -73,21 +78,18 @@ export class SubscribersService {
     return await this.subscriberModel.findOne({ _id });
   }
 
-  async update(_id: string, updateSubscriberDto: UpdateSubscriberDto, user: IUser) {
-    if (!mongoose.Types.ObjectId.isValid(_id)) {
-      throw new BadRequestException("Not found subscriber")
-    }
-    const { email, name, skills } = updateSubscriberDto;
+  async update(updateSubscriberDto: UpdateSubscriberDto, user: IUser) {
 
     let updatedSub = await this.subscriberModel.updateOne(
-      { _id },
+      { email: user.email },
       {
-        email, name, skills,
+        ...updateSubscriberDto,
         updatedBy: {
           _id: user._id,
           email: user.email
         }
-      }
+      },
+      { upsert: true }
     )
     return updatedSub;
   }
