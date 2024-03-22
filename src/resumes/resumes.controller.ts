@@ -22,6 +22,17 @@ export class ResumesController {
     return this.resumesService.findByUsers(user);
   }
 
+  @Get('by-hr')
+  @ResponseMessage("Get all Resume by hr!")
+  getResumeByHr(
+    @User() user: IUser,
+    @Query("current") currentPage: string,
+    @Query("pageSize") limit: string,
+    @Query() qs: string
+  ) {
+    return this.resumesService.findByHr(user, +currentPage, +limit, qs);
+  }
+
   @Get()
   @ResponseMessage("Fetch all resume with paginate!")
   findAll(

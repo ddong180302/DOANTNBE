@@ -36,6 +36,36 @@ export class AuthController {
         return this.authService.registerANewUser(registerUserDto);
     }
 
+    @Public()
+    @Post('confirm')
+    @ResponseMessage("Confirm a new account")
+    confirmANewUser(
+        @Body("email") email: string,
+        @Body("_id") _id: string,
+        @Body("codeConfirm") codeConfirm: string,
+    ) {
+        return this.authService.confirmANewUser(email, _id, codeConfirm);
+    }
+
+    @Public()
+    @Post('reset')
+    @ResponseMessage("Thay đổi mật khẩu thành công!")
+    resetPassword(
+        @Body("_id") _id: string,
+        @Body("email") email: string,
+        @Body("password") password: string,
+    ) {
+        return this.authService.resetPassword(_id, email, password);
+    }
+
+    @ResponseMessage("Get user by email")
+    @Post('by-email')
+    @Public()
+    async handleGetUserByEmail(@Body("email") email: string) {
+        return this.authService.handleGetUserByEmail(email);
+    }
+
+
     @ResponseMessage("Get user information")
     @Get('account')
     async handleGetAccount(@User() user: IUser) {

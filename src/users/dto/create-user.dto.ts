@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsEmail, IsMongoId, IsNotEmpty, IsNotEmptyObject, IsObject, IsString, ValidateNested } from "class-validator";
+import { IsBoolean, IsEmail, IsMongoId, IsNotEmpty, IsNotEmptyObject, IsObject, IsString, Length, MaxLength, MinLength, ValidateNested } from "class-validator";
 import mongoose from "mongoose";
 
 class Company {
@@ -20,7 +20,11 @@ export class CreateUserDto {
     @IsNotEmpty({ message: "Emali không được để trống!" })
     email: string;
 
+    codeConfirm: string;
+
     @IsNotEmpty({ message: "Password không được để trống!" })
+    @MinLength(6, { message: "Độ dài mật khẩu phải dài hơn 6 ký tự!" })
+    @MaxLength(12, { message: "Độ dài mật khẩu phải ngắn hơn 12 ký tự!" })
     password: string;
 
     @IsNotEmpty({ message: "Age không được để trống!" })
@@ -45,6 +49,8 @@ export class CreateUserDto {
     @Type(() => Company)
     company: Company;
 
+    isActive: boolean;
+
 }
 
 
@@ -53,11 +59,13 @@ export class RegisterUserDto {
     @IsNotEmpty({ message: "Name không được để trống!" })
     name: string;
 
-    @IsEmail({}, { message: "Emali không đúng định dạng!" })
-    @IsNotEmpty({ message: "Emali không được để trống!" })
+    @IsEmail({}, { message: "Email không đúng định dạng!" })
+    @IsNotEmpty({ message: "Email không được để trống!" })
     email: string;
 
     @IsNotEmpty({ message: "Password không được để trống!" })
+    @MinLength(6, { message: "Độ dài mật khẩu phải dài hơn 6 ký tự!" })
+    @MaxLength(12, { message: "Độ dài mật khẩu phải ngắn hơn 12 ký tự!" })
     password: string;
 
     @IsNotEmpty({ message: "Age không được để trống!" })
@@ -72,12 +80,16 @@ export class RegisterUserDto {
     @IsNotEmpty({ message: "Phone không được để trống!" })
     phone: string;
 
+    isActive: boolean;
+
+    codeConfirm: string;
+
 }
 
 export class UserLoginDto {
     @IsString()
     @IsNotEmpty()
-    @ApiProperty({ example: 'dong@gmail.com', description: 'username' })
+    @ApiProperty({ example: 'trandangdong18032002@gmail.com', description: 'username' })
     readonly username: string;
     @IsString()
     @IsNotEmpty()

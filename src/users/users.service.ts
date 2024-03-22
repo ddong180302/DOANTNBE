@@ -8,11 +8,13 @@ import { compareSync, genSaltSync, hashSync } from 'bcryptjs';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { IUser } from './users.interface';
 import aqp from 'api-query-params';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
+    private mailerService: MailerService,
   ) { }
 
   getHashPassword = (password: string) => {
@@ -29,6 +31,15 @@ export class UsersService {
 
   }
 
+  generateConfirmationCode = () => {
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += Math.floor(Math.random() * 10); // Thêm một số ngẫu nhiên từ 0 đến 9 vào chuỗi
+    }
+    return code;
+  }
+
+
   async create(createUserDto: CreateUserDto, user: IUser) {
     const { email, password, name, age, gender, address, phone, role, company } = createUserDto;
     const hashPassword = this.getHashPassword(password);
@@ -36,9 +47,29 @@ export class UsersService {
     if (checkUserEmail) {
       throw new BadRequestException("Email đã tồn tại vui lòng sử dụng email khác để đăng ký!");
     }
+
+    // Sử dụng hàm để tạo ra một confirmation code mới
+    const confirmationCode = this.generateConfirmationCode();
+    //console.log(confirmationCode); // In ra màn hình để kiểm tra
+
+    await this.mailerService.sendMail({
+      to: email,
+      from: '"Nice App" <support@example.com>',
+      subject: 'Welcome to Nice App! Confirm your Email',
+      template: "sign",
+      context: {
+        receiver: email, // Gửi đến địa chỉ email của người dùng mới
+        confirmationCode: confirmationCode // Mã code xác nhận
+      }
+    });
+
+
+
     let newAUser = await this.userModel.create({
       email: createUserDto.email,
       password: hashPassword,
+      codeConfirm: confirmationCode,
+      isActive: false,
       name,
       age,
       gender,
@@ -95,8 +126,9 @@ export class UsersService {
       _id: id
     })
       .select("-password")
-      .populate({ path: "role", select: { name: 1, _id: 1 } })
-      ;
+      .populate({
+        path: "role", select: { name: 1, _id: 1 }
+      });
   }
 
   findOneByUserName(username: string) {

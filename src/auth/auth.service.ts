@@ -13,6 +13,7 @@ import { Response } from 'express';
 import { Role, RoleDocument } from 'src/roles/schemas/role.schema';
 import { USER_ROLE } from 'src/databases/sample';
 import { RolesService } from 'src/roles/roles.service';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +23,8 @@ export class AuthService {
         private readonly usersService: UsersService,
         private readonly rolesService: RolesService,
         private jwtService: JwtService,
-        private configService: ConfigService
+        private configService: ConfigService,
+        private mailerService: MailerService,
     ) { }
 
     getHashPassword = (password: string) => {
@@ -35,6 +37,16 @@ export class AuthService {
         return compareSync(password, hash); //false
     }
 
+    generateConfirmationCode = () => {
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+            code += Math.floor(Math.random() * 10); // Thêm một số ngẫu nhiên từ 0 đến 9 vào chuỗi
+        }
+        return code;
+    }
+
+
+
     async registerANewUser(registerUserDto: RegisterUserDto) {
         const { email, password, name, age, gender, address, phone } = registerUserDto;
         const hashPassword = this.getHashPassword(password);
@@ -43,13 +55,27 @@ export class AuthService {
             throw new BadRequestException("Email đã tồn tại vui lòng sử dụng email khác để đăng ký!");
         }
 
+        // Sử dụng hàm để tạo ra một confirmation code mới
+        const confirmationCode = this.generateConfirmationCode();
+
+        await this.mailerService.sendMail({
+            to: email,
+            from: '"Nice App" <support@example.com>',
+            subject: 'Welcome to Nice App! Confirm your Email',
+            template: "sign",
+            context: {
+                receiver: email, // Gửi đến địa chỉ email của người dùng mới
+                confirmationCode: confirmationCode // Mã code xác nhận
+            }
+        });
+
         //fetch user role
         const userRole = await this.roleModel.findOne({ name: USER_ROLE });
 
-
-
         let register = await this.userModel.create({
             password: hashPassword,
+            codeConfirm: confirmationCode,
+            isActive: false,
             email,
             name,
             age,
@@ -59,6 +85,72 @@ export class AuthService {
             role: userRole?._id
         })
         return register;
+    }
+
+    async confirmANewUser(email: string, _id: string, codeConfirm: string) {
+        const checkUser = await this.userModel.findOne({ _id });
+        if (checkUser?.isActive === false) {
+            if (checkUser?.codeConfirm !== codeConfirm) {
+                throw new BadRequestException("Mã xác nhận không hợp lệ, vui lòng nhập lại!");
+            } else {
+                let confirm = await this.userModel.updateOne({ _id: _id }, {
+                    isActive: true,
+                    codeConfirm: "",
+                    updatedBy: {
+                        _id: _id,
+                        email: email
+                    }
+                });
+                return confirm;
+            }
+        }
+    }
+
+    async handleGetUserByEmail(email: string) {
+        const checkUserEmail = await this.userModel.findOne({ email }, { password: 0 })
+        if (!checkUserEmail) {
+            throw new BadRequestException("Email không tồn tại vui lòng đăng ký!");
+        }
+
+        // Sử dụng hàm để tạo ra một confirmation code mới
+        const confirmationCode = this.generateConfirmationCode();
+
+        await this.mailerService.sendMail({
+            to: email,
+            from: '"Nice App" <support@example.com>',
+            subject: 'Chào mừng bạn đến với Nice App! Xác nhận email của bạn',
+            template: "sign",
+            context: {
+                receiver: email, // Gửi đến địa chỉ email của người dùng mới
+                confirmationCode: confirmationCode // Mã code xác nhận
+            }
+        });
+
+        await this.userModel.updateOne({ email: email }, {
+            isActive: false,
+            codeConfirm: confirmationCode,
+
+        });
+
+        return checkUserEmail;
+    }
+
+
+    async resetPassword(_id: string, email: string, password: string) {
+        const hashPassword = this.getHashPassword(password);
+        const checkUserEmail = await this.userModel.findOne({ email })
+        if (!checkUserEmail) {
+            throw new BadRequestException("Email chưa được đăng ký trong hệ thống, vui lòng nhập email khác!");
+        }
+
+        let reset = await this.userModel.updateOne({ _id: _id }, {
+            password: hashPassword,
+            updatedBy: {
+                _id: _id,
+                email: email
+            }
+        });
+        return reset;
     }
 
     //username và password là hai tham số mà thư viện passport ném về
@@ -85,6 +177,10 @@ export class AuthService {
 
     async login(user: IUser, response: Response) {
         const { _id, name, email, role, permissions } = user;
+        const checkUser = await this.userModel.findOne({ _id });
+        if (checkUser?.isActive === false) {
+            throw new BadRequestException("Vui lòng xác thực tài khoản trước khi đăng nhập!");
+        }
         const payload = {
             sub: "token login",
             iss: "from server",

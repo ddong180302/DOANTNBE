@@ -32,6 +32,17 @@ export class JobsController {
     return this.jobsService.findAll(+currentPage, +limit, qs);
   }
 
+  @Get('by-hr')
+  @ResponseMessage("Get all Resume by hr!")
+  getJobByHr(
+    @User() user: IUser,
+    @Query("current") currentPage: string,
+    @Query("pageSize") limit: string,
+    @Query() qs: string
+  ) {
+    return this.jobsService.getJobByHr(user, +currentPage, +limit, qs);
+  }
+
   @Public()
   @Get(':id')
   @ResponseMessage("Fetch a job by id")

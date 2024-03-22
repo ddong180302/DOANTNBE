@@ -12,6 +12,24 @@ export class Company {
     address: string;
 
     @Prop()
+    companyType: string;
+
+    @Prop()
+    companySize: string;
+
+    @Prop()
+    country: string;
+
+    @Prop()
+    workingDays: string;
+
+    @Prop()
+    overtimePolicy: string;
+
+    @Prop()
+    ourkeyskills: string[];
+
+    @Prop()
     description: string;
 
     @Prop()

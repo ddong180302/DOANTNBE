@@ -7,10 +7,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import mongoose from 'mongoose';
 import aqp from 'api-query-params';
+import { User, UserDocument } from 'src/users/schemas/user.schema';
 
 @Injectable()
 export class JobsService {
-  constructor(@InjectModel(Job.name) private jobModel: SoftDeleteModel<JobDocument>) { }
+  constructor(
+    @InjectModel(Job.name) private jobModel: SoftDeleteModel<JobDocument>,
+    @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
+  ) { }
   async create(createJobDto: CreateJobDto, user: IUser) {
     let job = await this.jobModel.create({
       ...createJobDto,
@@ -58,6 +62,103 @@ export class JobsService {
 
   }
 
+  async getJobByHr(
+    user: IUser,
+    currentPage: number,
+    limit: number,
+    qs: string
+  ) {
+    if (user?.role?.name === "HR") {
+      // Lấy ID người dùng và chi tiết người dùng HR
+      const { _id } = user;
+      const userByHr = await this.userModel.findById(_id).populate("company");
+
+      // Phân tích chuỗi truy vấn
+      const { filter, sort, population, projection } = aqp(qs);
+
+      // Loại bỏ các tham số phân trang khỏi bộ lọc
+      delete filter.current;
+      delete filter.pageSize;
+
+      // Tính toán bù đắp phân trang và giới hạn mặc định
+      const offset = (currentPage - 1) * limit;
+      const defaultLimit = limit ? limit : 10;
+
+      // Đếm tổng số mục phù hợp với bộ lọc
+      const totalItems = await this.jobModel.countDocuments({
+        ...filter,
+        'company._id': userByHr?.company?._id,
+      });
+
+      // Tính toán tổng số trang dựa trên giới hạn mặc định
+      const totalPages = Math.ceil(totalItems / defaultLimit);
+
+      // Truy xuất CV nếu tìm thấy người dùng HR
+      if (userByHr) {
+        const result = await this.jobModel.find({
+          ...filter,
+          'company._id': userByHr?.company?._id,
+        })
+          .skip(offset)
+          .limit(defaultLimit)
+          .sort(sort as any)
+          .populate(population)
+          .select(projection)
+          .exec();
+
+        return {
+          meta: {
+            current: currentPage,
+            pageSize: limit,
+            pages: totalPages,
+            total: totalItems
+          },
+          result
+        };
+      } else {
+        // Xử lý trường hợp không tìm thấy người dùng HR
+        return {
+          meta: {
+            current: currentPage,
+            pageSize: limit,
+            pages: 0, // Cho biết không có dữ liệu
+            total: 0
+          },
+          result: [] // Gửi mảng rỗng
+        };
+      }
+
+    } else if (user?.role?.name !== "HR") {
+      const { filter, sort, population, projection } = aqp(qs);
+      delete filter.current;
+      delete filter.pageSize;
+      let offset = (currentPage - 1) * (+limit);
+      let defaultLimit = +limit ? +limit : 10;
+      const totalItems = (await this.jobModel.find(filter)).length;
+      const totalPages = Math.ceil(totalItems / defaultLimit);
+
+      const result = await this.jobModel.find(filter)
+        .skip(offset)
+        .limit(defaultLimit)
+        // @ts-ignore: Unreachable code error
+        .sort(sort as any)
+        .populate(population)
+        .select(projection as any)
+        .exec();
+
+      return {
+        meta: {
+          current: currentPage, //trang hiện tại
+          pageSize: limit, //số lượng bản ghi đã lấy
+          pages: totalPages, //tổng số trang với điều kiện query
+          total: totalItems // tổng số phần tử (số bản ghi)
+        },
+        result //kết quả query
+      }
+    }
+
+  }
+
 
   async findOne(id: string) {
     if (!mongoose.Types.ObjectId.isValid(id))
@@ -69,6 +170,7 @@ export class JobsService {
   }
 
   async update(id: string, updateJobDto: UpdateJobDto, user: IUser) {
+    console.log("check data job: ", updateJobDto);
     if (!mongoose.Types.ObjectId.isValid(id))
       return "job not found";
     let updatedJob = await this.jobModel.updateOne(

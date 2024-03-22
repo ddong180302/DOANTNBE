@@ -26,6 +26,12 @@ export class User {
     gender: string;
 
     @Prop()
+    codeConfirm: string;
+
+    @Prop()
+    isActive: boolean
+
+    @Prop()
     address: string;
 
     @Prop({ type: Object })
