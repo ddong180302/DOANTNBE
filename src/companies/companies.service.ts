@@ -5,13 +5,17 @@ import { Company, CompanyDocument } from './schemas/company.schema';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { IUser } from 'src/users/users.interface';
-import mongoose from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
 import aqp from 'api-query-params';
+import { User, UserDocument } from 'src/users/schemas/user.schema';
 
 
 @Injectable()
 export class CompaniesService {
-  constructor(@InjectModel(Company.name) private companyModel: SoftDeleteModel<CompanyDocument>) { }
+  constructor(
+    @InjectModel(Company.name) private companyModel: SoftDeleteModel<CompanyDocument>,
+    @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>
+  ) { }
 
   async create(createCompanyDto: CreateCompanyDto, user: IUser) {
     let company = await this.companyModel.create({
@@ -68,6 +72,20 @@ export class CompaniesService {
       _id: id
     })
     return company;
+  }
+
+
+  async findOneByUserId(user: IUser) {
+    const { _id } = user;
+    const userData = await this.userModel.findOne({ _id });
+    let idCompany: ObjectId;
+    if (userData) {
+      idCompany = userData?.company?._id;
+    }
+    if (idCompany) {
+      const companyData = await this.companyModel.findOne({ _id: idCompany })
+      return companyData;
+    }
   }
 
   async update(id: string, updateCompanyDto: UpdateCompanyDto, user: IUser) {

@@ -47,7 +47,7 @@ export class DatabasesService implements OnModuleInit {
                 await this.roleModel.insertMany([
                     {
                         name: ADMIN_ROLE,
-                        description: "Admin thì full quyền :v",
+                        description: "Admin thì full quyền ",
                         isActive: true,
                         permissions: permissions
                     },

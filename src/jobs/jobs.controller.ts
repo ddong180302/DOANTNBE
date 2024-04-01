@@ -20,7 +20,6 @@ export class JobsController {
     return this.jobsService.create(createJobDto, user);
   }
 
-
   @Public()
   @Get()
   @ResponseMessage("Fetch list Jobs with paginate")
@@ -41,6 +40,13 @@ export class JobsController {
     @Query() qs: string
   ) {
     return this.jobsService.getJobByHr(user, +currentPage, +limit, qs);
+  }
+
+  @Public()
+  @Get('by-company-id/:id')
+  @ResponseMessage("Get all job of company!")
+  getAllJobByComId(@Param('id') id: string) {
+    return this.jobsService.getAllJobByComId(id);
   }
 
   @Public()

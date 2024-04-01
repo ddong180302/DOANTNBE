@@ -33,6 +33,12 @@ export class CompaniesController {
     return this.companiesService.findOne(id);
   }
 
+  @Post('by-user')
+  @ResponseMessage("Get Company by user!")
+  findOneByUserId(@User() user: IUser) {
+    return this.companiesService.findOneByUserId(user);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,

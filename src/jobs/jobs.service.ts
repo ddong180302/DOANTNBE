@@ -159,6 +159,12 @@ export class JobsService {
 
   }
 
+  async getAllJobByComId(id: string) {
+    const jobOfCompany = await this.jobModel.find({ 'company._id': id });
+    const count = await this.jobModel.countDocuments({ 'company._id': id });
+    return { jobs: jobOfCompany, count: count };
+  }
+
 
   async findOne(id: string) {
     if (!mongoose.Types.ObjectId.isValid(id))
@@ -170,7 +176,6 @@ export class JobsService {
   }
 
   async update(id: string, updateJobDto: UpdateJobDto, user: IUser) {
-    console.log("check data job: ", updateJobDto);
     if (!mongoose.Types.ObjectId.isValid(id))
       return "job not found";
     let updatedJob = await this.jobModel.updateOne(

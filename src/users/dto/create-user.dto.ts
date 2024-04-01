@@ -16,8 +16,8 @@ export class CreateUserDto {
     @IsNotEmpty({ message: "Name không được để trống!" })
     name: string;
 
-    @IsEmail({}, { message: "Emali không đúng định dạng!" })
-    @IsNotEmpty({ message: "Emali không được để trống!" })
+    @IsEmail({}, { message: "Email không đúng định dạng!" })
+    @IsNotEmpty({ message: "Email không được để trống!" })
     email: string;
 
     codeConfirm: string;

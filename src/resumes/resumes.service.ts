@@ -108,7 +108,6 @@ export class ResumesService {
     if (user?.role?.name === "HR") {
       // Lấy ID người dùng và chi tiết người dùng HR
       const { _id } = user;
-      console.log("check user: ", user.role.name);
       const userByHr = await this.userModel.findById(_id).populate("company");
 
       // Phân tích chuỗi truy vấn

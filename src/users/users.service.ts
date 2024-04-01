@@ -9,12 +9,14 @@ import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { IUser } from './users.interface';
 import aqp from 'api-query-params';
 import { MailerService } from '@nestjs-modules/mailer';
+import { Role, RoleDocument } from 'src/roles/schemas/role.schema';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
     private mailerService: MailerService,
+    @InjectModel(Role.name) private roleModel: SoftDeleteModel<RoleDocument>
   ) { }
 
   getHashPassword = (password: string) => {
@@ -41,7 +43,7 @@ export class UsersService {
 
 
   async create(createUserDto: CreateUserDto, user: IUser) {
-    const { email, password, name, age, gender, address, phone, role, company } = createUserDto;
+    const { email, password, name, age, gender, address, phone, role } = createUserDto;
     const hashPassword = this.getHashPassword(password);
     const checkUserEmail = await this.userModel.findOne({ email })
     if (checkUserEmail) {
@@ -63,26 +65,56 @@ export class UsersService {
       }
     });
 
+    let roleName = "";
+    if (role) {
+      const dataRole = await this.roleModel.findOne({ _id: role })
+      console.log("datarole: ", dataRole);
+      roleName = dataRole?.name;
+    }
 
-
-    let newAUser = await this.userModel.create({
-      email: createUserDto.email,
-      password: hashPassword,
-      codeConfirm: confirmationCode,
-      isActive: false,
-      name,
-      age,
-      gender,
-      address,
-      role,
-      company,
-      phone,
-      createdBy: {
-        _id: user._id,
-        email: user.email
+    if (roleName === "HR") {
+      if (!createUserDto?.company) {
+        throw new BadRequestException("Cần phải chọn Tên công ty!");
       }
-    })
-    return newAUser;
+      let newAUser = await this.userModel.create({
+        email: createUserDto.email,
+        password: hashPassword,
+        codeConfirm: confirmationCode,
+        isActive: false,
+        name,
+        age,
+        gender,
+        address,
+        role,
+        company: createUserDto?.company,
+        phone,
+        createdBy: {
+          _id: user._id,
+          email: user.email
+        }
+      })
+      return newAUser;
+    }
+    else {
+      let newAUser = await this.userModel.create({
+        email: createUserDto.email,
+        password: hashPassword,
+        codeConfirm: confirmationCode,
+        isActive: false,
+        name,
+        age,
+        gender,
+        address,
+        role,
+        company: createUserDto?.company,
+        phone,
+        createdBy: {
+          _id: user._id,
+          email: user.email
+        }
+      })
+      return newAUser;
+    }
   }
 
   async findAll(
@@ -143,6 +175,7 @@ export class UsersService {
   }
 
   async update(updateUserDto: UpdateUserDto, user: IUser) {
+    console.log("check user: ", updateUserDto)
     return await this.userModel.updateOne({ _id: updateUserDto._id }, {
       ...updateUserDto,
       updatedBy: {

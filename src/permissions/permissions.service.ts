@@ -74,11 +74,17 @@ export class PermissionsService {
   }
 
   async update(id: string, updatePermissionDto: UpdatePermissionDto, user: IUser) {
+    const { name, apiPath, method, module } = updatePermissionDto;
+    const { _id, email } = user;
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestException("Not found permission")
     }
-    const { name, apiPath, method, module } = updatePermissionDto;
-    const { _id, email } = user;
+
+    const isExist = await this.permissionModel.findOne({ apiPath, method });
+    if (isExist) {
+      throw new BadRequestException(`Permission với apiPath = ${apiPath} và method = ${method} đã tồn tại!`);
+    }
     const updatePermission = await this.permissionModel.updateOne(
       {
         _id: id

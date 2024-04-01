@@ -46,7 +46,6 @@ export class RolesService {
     let defaultLimit = +limit ? +limit : 10;
     const totalItems = (await this.roleModel.find(filter)).length;
     const totalPages = Math.ceil(totalItems / defaultLimit);
-
     const result = await this.roleModel.find(filter)
       .skip(offset)
       .limit(defaultLimit)
@@ -84,9 +83,10 @@ export class RolesService {
       throw new BadRequestException("Not found role")
     }
 
-    // const isExist = await this.roleModel.findOne({ name });
+    // const isExist = await this.roleModel.findOne({ name: { $regex: new RegExp('^' + name + '$', 'i') } });
     // if (isExist) {
-    //   throw new BadRequestException(`Role với Name = ${name} đã tồn tại!`);
+    //   const upperCaseName = name.toUpperCase();
+    //   throw new BadRequestException(`Role với Name = ${upperCaseName}/${name} đã tồn tại!`);
     // }
 
     const updated = await this.roleModel.updateOne(
