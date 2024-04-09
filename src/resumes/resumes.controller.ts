@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ResumesService } from './resumes.service';
 import { CreateUserCvDto } from './dto/create-resume.dto';
-import { ResponseMessage, User } from 'src/decorator/customize';
+import { Public, ResponseMessage, User } from 'src/decorator/customize';
 import { IUser } from 'src/users/users.interface';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -21,6 +21,15 @@ export class ResumesController {
   getResumeByUser(@User() user: IUser) {
     return this.resumesService.findByUsers(user);
   }
+
+
+  @Public()
+  @Post('count')
+  @ResponseMessage("Count resume!")
+  countResume() {
+    return this.resumesService.countResume();
+  }
+
 
   @Get('by-hr')
   @ResponseMessage("Get all Resume by hr!")

@@ -22,25 +22,10 @@ export class ChatsController {
 
 
     @Public()
-    @Get()
+    @Get(':userId')
     @ResponseMessage("Fetch list Chats with paginate")
-    findAll(
-        @Query("current") currentPage: string,
-        @Query("pageSize") limit: string,
-        @Query() qs: string
-    ) {
-        return this.chatsService.findAll(+currentPage, +limit, qs);
-    }
-
-    @Get('by-hr')
-    @ResponseMessage("Get all Resume by hr!")
-    getChatByHr(
-        @User() user: IUser,
-        @Query("current") currentPage: string,
-        @Query("pageSize") limit: string,
-        @Query() qs: string
-    ) {
-        return this.chatsService.getChatByHr(user, +currentPage, +limit, qs);
+    findAllChatUserId(@Param('userId') userId: string,) {
+        return this.chatsService.findAllChatUserId(userId);
     }
 
     @Get(':firstId/:secondId')

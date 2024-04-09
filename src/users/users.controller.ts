@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto, CreateUserHrDto } from './dto/create-user.dto';
+import { UpdateInforUserDto, UpdateUserDto, UpdateUserHrDto } from './dto/update-user.dto';
 import { IUser } from './users.interface';
 import { Public, ResponseMessage, User } from 'src/decorator/customize';
 import { ApiTags } from '@nestjs/swagger';
@@ -14,8 +14,17 @@ export class UsersController {
   @Post()
   @ResponseMessage("Create a new user!")
   create(
-    @Body() createUserDto: CreateUserDto, @User() user: IUser) {
+    @Body() createUserDto: CreateUserDto, @User() user: IUser
+  ) {
     return this.usersService.create(createUserDto, user);
+  }
+
+  @Post("/hr")
+  @ResponseMessage("Create a new user!")
+  createUserHr(
+    @Body() createUserHrDto: CreateUserHrDto, @User() user: IUser
+  ) {
+    return this.usersService.createUserHr(createUserHrDto, user);
   }
 
   @Get()
@@ -35,10 +44,44 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
+  @Public()
+  @Get('userId/:id')
+  @ResponseMessage("Fetch id user by id!")
+  findIdUser(@Param('id') id: string) {
+    return this.usersService.findIdUser(id);
+  }
+
+  @Public()
+  @Post('count')
+  @ResponseMessage("Fetch id user by id!")
+  countUser() {
+    return this.usersService.countUser();
+  }
+
+
+
+  @Post('by-user')
+  @ResponseMessage("Fetch user by user!")
+  findByUser(@User() user: IUser) {
+    return this.usersService.findByUser(user);
+  }
+
   @Patch()
   @ResponseMessage("Update a user!")
   update(@Body() updateUserDto: UpdateUserDto, @User() user: IUser) {
     return this.usersService.update(updateUserDto, user);
+  }
+
+  @Patch("by-user")
+  @ResponseMessage("Update a user!")
+  updateInforByUser(@Body() updateInforUserDto: UpdateInforUserDto, @User() user: IUser) {
+    return this.usersService.updateInforByUser(updateInforUserDto, user);
+  }
+
+  @Patch("/hr")
+  @ResponseMessage("Update a user!")
+  updateHr(@Body() updateUserHrDto: UpdateUserHrDto, @User() user: IUser) {
+    return this.usersService.updateHr(updateUserHrDto, user);
   }
 
   @Delete(':id')

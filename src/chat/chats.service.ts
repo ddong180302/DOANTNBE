@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { IUser } from 'src/users/users.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
@@ -17,165 +17,67 @@ export class ChatsService {
     ) { }
     async create(createChatDto: CreateChatDto, user: IUser) {
         const { firstId, secondId } = createChatDto;
-
         try {
-            const chat = await this.chatModel.findOne({ firstId, secondId })
-            if (chat) return chat;
-
-            const newChat = await this.chatModel.create({
-                ...createChatDto,
-                createdBy: {
-                    _id: user._id,
-                    email: user.email
-                }
-            })
-            return {
-                _id: newChat._id,
-                createdAt: newChat.createdAt
-            };
-        } catch (error) {
-            console.log(error);
-        }
-
-
-    }
-
-    async findAll(
-        currentPage: number,
-        limit: number,
-        qs: string
-    ) {
-        const { filter, sort, population } = aqp(qs);
-        delete filter.current;
-        delete filter.pageSize;
-        let offset = (currentPage - 1) * (+limit);
-        let defaultLimit = +limit ? +limit : 10;
-        const totalItems = (await this.chatModel.find(filter)).length;
-        const totalPages = Math.ceil(totalItems / defaultLimit);
-
-        const result = await this.chatModel.find(filter)
-            .skip(offset)
-            .limit(defaultLimit)
-            // @ts-ignore: Unreachable code error
-            .sort(sort as any)
-            .populate(population)
-            .exec();
-
-        return {
-            meta: {
-                current: currentPage, //trang hiện tại
-                pageSize: limit, //số lượng bản ghi đã lấy
-                pages: totalPages, //tổng số trang với điều kiện query
-                total: totalItems // tổng số phần tử (số bản ghi)
-            },
-            result //kết quả query
-        }
-
-    }
-
-    async getChatByHr(
-        user: IUser,
-        currentPage: number,
-        limit: number,
-        qs: string
-    ) {
-        if (user?.role?.name === "HR") {
-            // Lấy ID người dùng và chi tiết người dùng HR
-            const { _id } = user;
-            const userByHr = await this.userModel.findById(_id).populate("company");
-
-            // Phân tích chuỗi truy vấn
-            const { filter, sort, population, projection } = aqp(qs);
-
-            // Loại bỏ các tham số phân trang khỏi bộ lọc
-            delete filter.current;
-            delete filter.pageSize;
-
-            // Tính toán bù đắp phân trang và giới hạn mặc định
-            const offset = (currentPage - 1) * limit;
-            const defaultLimit = limit ? limit : 10;
-
-            // Đếm tổng số mục phù hợp với bộ lọc
-            const totalItems = await this.chatModel.countDocuments({
-                ...filter,
-                'company._id': userByHr?.company?._id,
-            });
-
-            // Tính toán tổng số trang dựa trên giới hạn mặc định
-            const totalPages = Math.ceil(totalItems / defaultLimit);
-
-            // Truy xuất CV nếu tìm thấy người dùng HR
-            if (userByHr) {
-                const result = await this.chatModel.find({
-                    ...filter,
-                    'company._id': userByHr?.company?._id,
-                })
-                    .skip(offset)
-                    .limit(defaultLimit)
-                    .sort(sort as any)
-                    .populate(population)
-                    .select(projection)
-                    .exec();
-
-                return {
-                    meta: {
-                        current: currentPage,
-                        pageSize: limit,
-                        pages: totalPages,
-                        total: totalItems
-                    },
-                    result
-                };
+            if (firstId === secondId) {
+                const dataAllChat = await this.chatModel.find({ $or: [{ firstId: firstId }, { secondId: firstId }] });
+                return dataAllChat;
             } else {
-                // Xử lý trường hợp không tìm thấy người dùng HR
-                return {
-                    meta: {
-                        current: currentPage,
-                        pageSize: limit,
-                        pages: 0, // Cho biết không có dữ liệu
-                        total: 0
-                    },
-                    result: [] // Gửi mảng rỗng
-                };
+
+                if (firstId && secondId) {
+                    const chat = await this.chatModel.findOne({
+                        $or: [
+                            { firstId: firstId, secondId: secondId },
+                            { firstId: secondId, secondId: firstId }
+                        ]
+                    });
+                    if (chat) {
+                        const dataAllChat = await this.chatModel.find({ $or: [{ firstId: firstId }, { secondId: firstId }] });
+                        return dataAllChat;
+                    } else {
+                        const firstUser = await this.userModel.findOne({ _id: firstId });
+                        const secondUser = await this.userModel.findOne({ _id: secondId });
+                        if (firstUser && secondUser) {
+                            const newChat = await this.chatModel.create({
+                                firstId: firstId,
+                                secondId: secondId,
+                                firstName: firstUser.name, // Lưu trường name của firstUser vào firstName
+                                secondName: secondUser.name, // Lưu trường name của secondUser vào secondName
+                                firstEmail: firstUser.email, // Lưu trường email của firstUser vào firstEmail
+                                secondEmail: secondUser.email, // Lưu trường email của secondUser vào secondEmail
+                                createdBy: {
+                                    _id: user._id,
+                                    email: user.email
+                                }
+                            });
+
+                            if (newChat) {
+                                const dataAllChat = await this.chatModel.find({ $or: [{ firstId: firstId }, { secondId: firstId }] });
+                                return dataAllChat;
+                            }
+                        } else {
+                            throw new BadRequestException("Lỗi");
+                        }
+                    }
+                }
             }
-
-        } else if (user?.role?.name !== "HR") {
-            const { filter, sort, population, projection } = aqp(qs);
-            delete filter.current;
-            delete filter.pageSize;
-            let offset = (currentPage - 1) * (+limit);
-            let defaultLimit = +limit ? +limit : 10;
-            const totalItems = (await this.chatModel.find(filter)).length;
-            const totalPages = Math.ceil(totalItems / defaultLimit);
-
-            const result = await this.chatModel.find(filter)
-                .skip(offset)
-                .limit(defaultLimit)
-                // @ts-ignore: Unreachable code error
-                .sort(sort as any)
-                .populate(population)
-                .select(projection as any)
-                .exec();
-
-            return {
-                meta: {
-                    current: currentPage, //trang hiện tại
-                    pageSize: limit, //số lượng bản ghi đã lấy
-                    pages: totalPages, //tổng số trang với điều kiện query
-                    total: totalItems // tổng số phần tử (số bản ghi)
-                },
-                result //kết quả query
-            }
+        } catch (error) {
+            console.log('bị lỗi rồi: ', error);
         }
-
     }
 
+    async findAllChatUserId(userId: string) {
+        const dataAllChat = await this.chatModel.find({ $or: [{ firstId: userId }, { secondId: userId }] });
+        return dataAllChat;
+    }
 
     async findOne(firstId: string, secondId: string) {
         if (!mongoose.Types.ObjectId.isValid(firstId) && !mongoose.Types.ObjectId.isValid(secondId))
             return "chat not found";
         let chat = await this.chatModel.findOne({
-            firstId: firstId, secondId: secondId
+            $or: [
+                { firstId: firstId, secondId: secondId },
+                { firstId: secondId, secondId: firstId }
+            ]
         })
         return chat;
     }

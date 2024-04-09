@@ -31,6 +31,13 @@ export class JobsController {
     return this.jobsService.findAll(+currentPage, +limit, qs);
   }
 
+  @Public()
+  @Post('count')
+  @ResponseMessage("Count job!")
+  countJob() {
+    return this.jobsService.countJob();
+  }
+
   @Get('by-hr')
   @ResponseMessage("Get all Resume by hr!")
   getJobByHr(

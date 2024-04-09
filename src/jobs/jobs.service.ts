@@ -175,6 +175,11 @@ export class JobsService {
     return job;
   }
 
+  async countJob() {
+    const count = await this.jobModel.countDocuments();
+    return count;
+  }
+
   async update(id: string, updateJobDto: UpdateJobDto, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(id))
       return "job not found";

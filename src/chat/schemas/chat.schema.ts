@@ -11,6 +11,18 @@ export class Chat {
     @Prop({ type: mongoose.Schema.Types.ObjectId })
     secondId: mongoose.Schema.Types.ObjectId;
 
+    @Prop()
+    firstName: string;
+
+    @Prop()
+    firstEmail: string;
+
+    @Prop()
+    secondName: string;
+
+    @Prop()
+    secondEmail: string;
+
     @Prop({ type: Object })
     createdBy: {
         _id: mongoose.Schema.Types.ObjectId;

@@ -205,6 +205,11 @@ export class ResumesService {
     })
   }
 
+  async countResume() {
+    const count = await this.resumeModel.countDocuments();
+    return count;
+  }
+
   async update(_id: string, status: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       throw new BadRequestException("Not found resume")

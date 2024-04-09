@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto, CreateUserHrDto } from './dto/create-user.dto';
+import { UpdateInforUserDto, UpdateUserDto, UpdateUserHrDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import mongoose, { Model } from 'mongoose';
@@ -41,6 +41,56 @@ export class UsersService {
     return code;
   }
 
+  async countUser() {
+    const count = await this.userModel.countDocuments();
+
+    return count;
+  }
+
+
+  async createUserHr(createUserHrDto: CreateUserHrDto, user: IUser) {
+    const { email, password, name, age, gender, company, address, phone, role } = createUserHrDto;
+    const hashPassword = this.getHashPassword(password);
+    const checkUserEmail = await this.userModel.findOne({ email })
+    if (checkUserEmail) {
+      throw new BadRequestException("Email đã tồn tại vui lòng sử dụng email khác để đăng ký!");
+    }
+
+    // Sử dụng hàm để tạo ra một confirmation code mới
+    const confirmationCode = this.generateConfirmationCode();
+    //console.log(confirmationCode); // In ra màn hình để kiểm tra
+
+    await this.mailerService.sendMail({
+      to: email,
+      from: '"Nice App" <support@example.com>',
+      subject: 'Welcome to Nice App! Confirm your Email',
+      template: "sign",
+      context: {
+        receiver: email, // Gửi đến địa chỉ email của người dùng mới
+        confirmationCode: confirmationCode // Mã code xác nhận
+      }
+    });
+
+    let newAUser = await this.userModel.create({
+      email: createUserHrDto.email,
+      password: hashPassword,
+      codeConfirm: confirmationCode,
+      isActive: false,
+      name,
+      age,
+      gender,
+      address,
+      role,
+      phone,
+      company,
+      createdBy: {
+        _id: user._id,
+        email: user.email
+      }
+    })
+    return newAUser;
+  }
+
 
   async create(createUserDto: CreateUserDto, user: IUser) {
     const { email, password, name, age, gender, address, phone, role } = createUserDto;
@@ -65,57 +115,25 @@ export class UsersService {
       }
     });
 
-    let roleName = "";
-    if (role) {
-      const dataRole = await this.roleModel.findOne({ _id: role })
-      console.log("datarole: ", dataRole);
-      roleName = dataRole?.name;
-    }
-
-    if (roleName === "HR") {
-      if (!createUserDto?.company) {
-        throw new BadRequestException("Cần phải chọn Tên công ty!");
+    let newAUser = await this.userModel.create({
+      email: createUserDto.email,
+      password: hashPassword,
+      codeConfirm: confirmationCode,
+      isActive: false,
+      name,
+      age,
+      gender,
+      address,
+      role,
+      phone,
+      createdBy: {
+        _id: user._id,
+        email: user.email
       }
-      let newAUser = await this.userModel.create({
-        email: createUserDto.email,
-        password: hashPassword,
-        codeConfirm: confirmationCode,
-        isActive: false,
-        name,
-        age,
-        gender,
-        address,
-        role,
-        company: createUserDto?.company,
-        phone,
-        createdBy: {
-          _id: user._id,
-          email: user.email
-        }
-      })
-      return newAUser;
-    }
-    else {
-      let newAUser = await this.userModel.create({
-        email: createUserDto.email,
-        password: hashPassword,
-        codeConfirm: confirmationCode,
-        isActive: false,
-        name,
-        age,
-        gender,
-        address,
-        role,
-        company: createUserDto?.company,
-        phone,
-        createdBy: {
-          _id: user._id,
-          email: user.email
-        }
-      })
-      return newAUser;
-    }
+    })
+    return newAUser;
   }
+
 
   async findAll(
     currentPage: number,
@@ -150,17 +168,27 @@ export class UsersService {
 
   }
 
-  findOne(id: string) {
+  async findOne(id: string) {
     if (!mongoose.Types.ObjectId.isValid(id))
       return "user not found";
 
-    return this.userModel.findOne({
+    return await this.userModel.findOne({
       _id: id
     })
       .select("-password")
       .populate({
         path: "role", select: { name: 1, _id: 1 }
       });
+  }
+
+  async findIdUser(id: string) {
+    const userdata = await this.userModel.findOne({ 'company._id': id }); // Sử dụng cú pháp {'company._id': id}
+
+    if (userdata) {
+      return { _id: userdata._id };
+    } else {
+      return null; // hoặc bạn có thể xử lý trường hợp không tìm thấy người dùng theo id ở đây
+    }
   }
 
   findOneByUserName(username: string) {
@@ -174,8 +202,30 @@ export class UsersService {
     );
   }
 
+  async findByUser(user: IUser) {
+    const { _id } = user;
+    if (!_id) {
+      throw new BadRequestException("User not found!");
+    } else {
+      const dataUser = await this.userModel.findOne({ _id: user._id });
+      if (dataUser) {
+        const data = {
+          _id: dataUser._id,
+          name: dataUser.name,
+          email: dataUser.email,
+          age: dataUser.age,
+          gender: dataUser.gender,
+          address: dataUser.address,
+          phone: dataUser.phone,
+          createdAt: dataUser.createdAt,
+          updatedAt: dataUser.updatedAt
+        }
+        return data;
+      }
+    }
+  }
+
   async update(updateUserDto: UpdateUserDto, user: IUser) {
-    console.log("check user: ", updateUserDto)
     return await this.userModel.updateOne({ _id: updateUserDto._id }, {
       ...updateUserDto,
       updatedBy: {
@@ -184,6 +234,28 @@ export class UsersService {
       }
     });
   }
+
+  async updateInforByUser(updateInforUserDto: UpdateInforUserDto, user: IUser) {
+    //const { email, name, age, gender, address, phone } = updateInforUserDto;
+    return await this.userModel.updateOne({ _id: updateInforUserDto._id }, {
+      ...updateInforUserDto,
+      updatedBy: {
+        _id: user._id,
+        email: user.email
+      }
+    });
+  }
+
+  async updateHr(updateUserHrDto: UpdateUserHrDto, user: IUser) {
+    return await this.userModel.updateOne({ _id: updateUserHrDto._id }, {
+      ...updateUserHrDto,
+      updatedBy: {
+        _id: user._id,
+        email: user.email
+      }
+    });
+  }
+
 
   async remove(id: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(id))

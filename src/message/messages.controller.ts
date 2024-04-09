@@ -21,26 +21,15 @@ export class MessagesController {
     }
 
     @Public()
-    @Get()
-    @ResponseMessage("Fetch list Messages with paginate")
-    findAll(
-        @Query("current") currentPage: string,
-        @Query("pageSize") limit: string,
-        @Query() qs: string
+    @Get(':firstId/:secondId')
+    @ResponseMessage("Fetch all message by id")
+    findAllMessage(
+        @Param('firstId') firstId: string,
+        @Param('secondId') secondId: string
     ) {
-        return this.messagesService.findAll(+currentPage, +limit, qs);
+        return this.messagesService.findAllMessage(firstId, secondId);
     }
 
-    @Get('by-hr')
-    @ResponseMessage("Get all Resume by hr!")
-    getMessageByHr(
-        @User() user: IUser,
-        @Query("current") currentPage: string,
-        @Query("pageSize") limit: string,
-        @Query() qs: string
-    ) {
-        return this.messagesService.getMessageByHr(user, +currentPage, +limit, qs);
-    }
 
     @Get(':chatId')
     @ResponseMessage("Fetch a message by id")

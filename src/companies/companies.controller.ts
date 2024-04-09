@@ -28,6 +28,14 @@ export class CompaniesController {
   }
 
   @Public()
+  @Post('count')
+  @ResponseMessage("Count company!")
+  countCompany() {
+    return this.companiesService.countCompany();
+  }
+
+
+  @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.companiesService.findOne(id);

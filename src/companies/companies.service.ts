@@ -74,6 +74,13 @@ export class CompaniesService {
     return company;
   }
 
+  async countCompany() {
+    const count = await this.companyModel.countDocuments();
+
+    return count;
+  }
+
+
 
   async findOneByUserId(user: IUser) {
     const { _id } = user;
