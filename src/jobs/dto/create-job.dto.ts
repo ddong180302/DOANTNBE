@@ -38,6 +38,9 @@ export class CreateJobDto {
     @IsNotEmpty({ message: "Quantity không được để trống!" })
     quantity: number;
 
+    @IsNotEmpty({ message: "paymentAmount không được để trống!" })
+    paymentAmount: number;
+
     @IsNotEmpty({ message: "Level không được để trống!" })
     level: string;
 
@@ -45,14 +48,9 @@ export class CreateJobDto {
     description: string;
 
     @Transform(({ value }) => new Date(value))
-    @IsNotEmpty({ message: "Start date không được để trống!" })
-    @IsDate({ message: "startDate có định dạng là Date" })
-    startDate: Date;
-
-    @Transform(({ value }) => new Date(value))
-    @IsNotEmpty({ message: "End date không được để trống!" })
-    @IsDate({ message: "endDate có định dạng là Date" })
-    endDate: Date;
+    @IsNotEmpty({ message: "expiredAt không được để trống!" })
+    @IsDate({ message: "expiredAt có định dạng là Date" })
+    expiredAt: Date;
 
     @IsBoolean({ message: "IsActive có định dạng là booblean" })
     @IsNotEmpty({ message: "IsActive không được để trống!" })

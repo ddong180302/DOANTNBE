@@ -75,8 +75,7 @@ export class CompaniesService {
   }
 
   async countCompany() {
-    const count = await this.companyModel.countDocuments();
-
+    const count = await this.companyModel.countDocuments({ isDeleted: false });
     return count;
   }
 

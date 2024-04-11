@@ -35,10 +35,10 @@ export class Job {
     description: string;
 
     @Prop()
-    startDate: Date;
+    expiredAt: Date;
 
     @Prop()
-    endDate: Date;
+    paymentAmount: number;
 
     @Prop()
     isActive: boolean

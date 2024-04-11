@@ -8,6 +8,8 @@ import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import mongoose from 'mongoose';
 import aqp from 'api-query-params';
 import { User, UserDocument } from 'src/users/schemas/user.schema';
+import cron from 'node-cron';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class JobsService {
@@ -37,6 +39,10 @@ export class JobsService {
     const { filter, sort, population } = aqp(qs);
     delete filter.current;
     delete filter.pageSize;
+
+    // Thêm điều kiện isActive = true vào filter
+    filter.isActive = true;
+
     let offset = (currentPage - 1) * (+limit);
     let defaultLimit = +limit ? +limit : 10;
     const totalItems = (await this.jobModel.find(filter)).length;
@@ -59,7 +65,6 @@ export class JobsService {
       },
       result //kết quả query
     }
-
   }
 
   async getJobByHr(
@@ -160,8 +165,8 @@ export class JobsService {
   }
 
   async getAllJobByComId(id: string) {
-    const jobOfCompany = await this.jobModel.find({ 'company._id': id });
-    const count = await this.jobModel.countDocuments({ 'company._id': id });
+    const jobOfCompany = await this.jobModel.find({ 'company._id': id, isDeleted: false });
+    const count = await this.jobModel.countDocuments({ 'company._id': id, isDeleted: false });
     return { jobs: jobOfCompany, count: count };
   }
 
@@ -176,7 +181,7 @@ export class JobsService {
   }
 
   async countJob() {
-    const count = await this.jobModel.countDocuments();
+    const count = await this.jobModel.countDocuments({ isDeleted: false });
     return count;
   }
 
@@ -211,5 +216,29 @@ export class JobsService {
     return this.jobModel.softDelete({
       _id: id
     });
+  }
+
+  //@Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron('0 0 * * *')
+  async softDeleteExpiredJobs() {
+    try {
+      const currentDate = new Date();
+      const expiredJobs = await this.jobModel.find({ expiredAt: { $lte: currentDate } });
+      console.log("expiredJobs: ", expiredJobs)
+      // Soft delete expired jobs
+      await this.jobModel.updateMany(
+        { _id: { $in: expiredJobs.map((job) => job._id) } },
+        {
+          $set: {
+            isDeleted: true,
+            deletedAt: currentDate,
+          },
+        }
+      );
+
+      console.log('Soft deleted expired jobs:', expiredJobs.length);
+    } catch (error) {
+      console.error('Error soft deleting expired jobs:', error);
+    }
   }
 }
