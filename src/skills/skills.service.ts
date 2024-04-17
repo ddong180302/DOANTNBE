@@ -15,9 +15,12 @@ export class SkillsService {
   async create(createSkillDto: CreateSkillDto, user: IUser) {
     const { name } = createSkillDto;
     const { _id, email } = user;
-    const isExist = await this.skillModel.findOne({ name });
+    const isExist = await this.skillModel.findOne({
+      name: { $regex: new RegExp('^' + name + '$', 'i') }
+    });
     if (isExist) {
-      throw new BadRequestException(`Skill với Name = ${name} đã tồn tại!`);
+      const upperCaseName = name.toUpperCase();
+      throw new BadRequestException(`Skill với Name = ${upperCaseName}/${name} đã tồn tại!`);
     }
     const newSkill = await this.skillModel.create({
       name,

@@ -36,14 +36,23 @@ export class UsersService {
   generateConfirmationCode = () => {
     let code = '';
     for (let i = 0; i < 6; i++) {
-      code += Math.floor(Math.random() * 10); // Thêm một số ngẫu nhiên từ 0 đến 9 vào chuỗi
+      code += Math.floor(Math.random() * 10);
     }
     return code;
   }
 
   async countUser() {
     const count = await this.userModel.countDocuments();
+    return count;
+  }
 
+  async countUserWithDate(startDate: string, endDate: string) {
+    const count = await this.userModel.countDocuments({
+      createdAt: {
+        $gte: startDate,
+        $lt: endDate,
+      },
+    });
     return count;
   }
 

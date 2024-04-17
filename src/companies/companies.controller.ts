@@ -34,6 +34,16 @@ export class CompaniesController {
     return this.companiesService.countCompany();
   }
 
+  @Public()
+  @Post('countDate')
+  @ResponseMessage("Count company by date!")
+  countCompanyWithDate(
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string,
+  ) {
+    return this.companiesService.countCompanyWithDate(startDate, endDate);
+  }
+
 
   @Public()
   @Get(':id')

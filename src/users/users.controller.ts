@@ -53,9 +53,21 @@ export class UsersController {
 
   @Public()
   @Post('count')
-  @ResponseMessage("Fetch id user by id!")
+  @ResponseMessage("count user!")
   countUser() {
     return this.usersService.countUser();
+  }
+
+
+
+  @Public()
+  @Post('countDate')
+  @ResponseMessage("Count user by date!")
+  countUserWithDate(
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string,
+  ) {
+    return this.usersService.countUserWithDate(startDate, endDate);
   }
 
 

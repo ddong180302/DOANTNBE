@@ -80,6 +80,16 @@ export class CompaniesService {
   }
 
 
+  async countCompanyWithDate(startDate: string, endDate: string) {
+    const count = await this.companyModel.countDocuments({
+      createdAt: {
+        $gte: startDate,
+        $lt: endDate,
+      },
+    });
+    return count;
+  }
+
 
   async findOneByUserId(user: IUser) {
     const { _id } = user;

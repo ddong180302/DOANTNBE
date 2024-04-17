@@ -38,8 +38,34 @@ export class JobsController {
     return this.jobsService.countJob();
   }
 
+  @Public()
+  @Post('countDate')
+  @ResponseMessage("Count job by date!")
+  countJobWithDate(
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string,
+  ) {
+    return this.jobsService.countJobWithDate(startDate, endDate);
+  }
+
+  @Post('count-by-hr')
+  @ResponseMessage("Count job!")
+  countJobByHr(@User() user: IUser) {
+    return this.jobsService.countJobByHr(user);
+  }
+
+  @Post('countDate-by-hr')
+  @ResponseMessage("Count job!")
+  countJobByHrWithDate(
+    @User() user: IUser,
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string,
+  ) {
+    return this.jobsService.countJobByHrWithDate(user, startDate, endDate);
+  }
+
   @Get('by-hr')
-  @ResponseMessage("Get all Resume by hr!")
+  @ResponseMessage("Get all Job by hr!")
   getJobByHr(
     @User() user: IUser,
     @Query("current") currentPage: string,

@@ -30,6 +30,32 @@ export class ResumesController {
     return this.resumesService.countResume();
   }
 
+  @Public()
+  @Post('countDate')
+  @ResponseMessage("Count resume by date!")
+  countResumeWithDate(
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string,
+  ) {
+    return this.resumesService.countResumeWithDate(startDate, endDate);
+  }
+
+  @Post('count-by-hr')
+  @ResponseMessage("Count resume!")
+  countResumeByHr(@User() user: IUser) {
+    return this.resumesService.countResumeByHr(user);
+  }
+
+  @Post('countDate-by-hr')
+  @ResponseMessage("Count job!")
+  countResumeByHrWithDate(
+    @User() user: IUser,
+    @Query("startDate") startDate: string,
+    @Query("endDate") endDate: string,
+  ) {
+    return this.resumesService.countResumeByHrWithDate(user, startDate, endDate);
+  }
+
 
   @Get('by-hr')
   @ResponseMessage("Get all Resume by hr!")

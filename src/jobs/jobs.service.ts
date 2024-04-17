@@ -5,7 +5,7 @@ import { IUser } from 'src/users/users.interface';
 import { Job, JobDocument } from './schemas/job.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
-import mongoose from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
 import aqp from 'api-query-params';
 import { User, UserDocument } from 'src/users/schemas/user.schema';
 import cron from 'node-cron';
@@ -181,7 +181,51 @@ export class JobsService {
   }
 
   async countJob() {
-    const count = await this.jobModel.countDocuments({ isDeleted: false });
+    const count = await this.jobModel.countDocuments();
+    return count;
+  }
+
+  async countJobByHr(user: IUser,) {
+    const { _id } = user;
+    const userData = await this.userModel.findOne({ _id });
+    let idCompany: ObjectId;
+    if (userData) {
+      idCompany = userData?.company?._id;
+    }
+    if (idCompany) {
+      const count = await this.jobModel.countDocuments({ 'company._id': idCompany, isDeleted: false });
+      return count;
+    }
+  }
+
+  async countJobByHrWithDate(user: IUser, startDate: string, endDate: string) {
+    const { _id } = user;
+    const userData = await this.userModel.findOne({ _id });
+    let idCompany: ObjectId;
+    if (userData) {
+      idCompany = userData?.company?._id;
+    }
+    if (idCompany) {
+      const count = await this.jobModel.countDocuments({
+        'company._id': idCompany,
+        createdAt: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      });
+      return count;
+    }
+  }
+
+
+
+  async countJobWithDate(startDate: string, endDate: string) {
+    const count = await this.jobModel.countDocuments({
+      createdAt: {
+        $gte: startDate,
+        $lt: endDate,
+      },
+    });
     return count;
   }
 

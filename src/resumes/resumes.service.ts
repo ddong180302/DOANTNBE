@@ -5,7 +5,7 @@ import { IUser } from 'src/users/users.interface';
 import { Resume, ResumeDocument } from './schemas/resume.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
-import mongoose from 'mongoose';
+import mongoose, { ObjectId } from 'mongoose';
 import aqp from 'api-query-params';
 import { User, UserDocument } from 'src/users/schemas/user.schema';
 
@@ -208,6 +208,49 @@ export class ResumesService {
   async countResume() {
     const count = await this.resumeModel.countDocuments();
     return count;
+  }
+
+
+  async countResumeWithDate(startDate: string, endDate: string) {
+    const count = await this.resumeModel.countDocuments({
+      createdAt: {
+        $gte: startDate,
+        $lt: endDate,
+      },
+    });
+    return count;
+  }
+
+  async countResumeByHr(user: IUser,) {
+    const { _id } = user;
+    const userData = await this.userModel.findOne({ _id });
+    let idCompany: ObjectId;
+    if (userData) {
+      idCompany = userData?.company?._id;
+    }
+    if (idCompany) {
+      const count = await this.resumeModel.countDocuments({ companyId: idCompany, isDeleted: false });
+      return count;
+    }
+  }
+
+  async countResumeByHrWithDate(user: IUser, startDate: string, endDate: string) {
+    const { _id } = user;
+    const userData = await this.userModel.findOne({ _id });
+    let idCompany: ObjectId;
+    if (userData) {
+      idCompany = userData?.company?._id;
+    }
+    if (idCompany) {
+      const count = await this.resumeModel.countDocuments({
+        companyId: idCompany,
+        createdAt: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      });
+      return count;
+    }
   }
 
   async update(_id: string, status: string, user: IUser) {
