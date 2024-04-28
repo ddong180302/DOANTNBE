@@ -8,13 +8,17 @@ import { IUser } from 'src/users/users.interface';
 import mongoose, { ObjectId } from 'mongoose';
 import aqp from 'api-query-params';
 import { User, UserDocument } from 'src/users/schemas/user.schema';
+import { MailerService } from '@nestjs-modules/mailer';
+import { Role, RoleDocument } from 'src/roles/schemas/role.schema';
 
 
 @Injectable()
 export class CompaniesService {
   constructor(
     @InjectModel(Company.name) private companyModel: SoftDeleteModel<CompanyDocument>,
-    @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>
+    private mailerService: MailerService,
+    @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
+    @InjectModel(Role.name) private roleModel: SoftDeleteModel<RoleDocument>
   ) { }
 
   async create(createCompanyDto: CreateCompanyDto, user: IUser) {
@@ -30,6 +34,55 @@ export class CompaniesService {
       _id: company._id,
       createdAt: company.createdAt
     };
+  }
+
+  async contact(requestBody: any) {
+    const { name, position, email, location, phone, nameCompany, websiteAddress } = requestBody;
+    const adminRole = await this.roleModel.findOne({ name: 'ADMIN' });
+    if (!adminRole) {
+      throw new Error('Không tìm thấy role ADMIN');
+    }
+    const userAdmin = await this.userModel.findOne(
+      { role: adminRole._id },
+      { email: 1, _id: 0 }
+    );
+
+    if (userAdmin) {
+      const emailAdmin = userAdmin?.email;
+      await this.mailerService.sendMail({
+        to: emailAdmin,
+        from: '"Nice App" <support@example.com>',
+        subject: 'Welcome to Nice App! Confirm your Email',
+        template: "contact",
+        context: {
+          email: email,
+          name: name,
+          position: position,
+          location: location,
+          phone: phone,
+          nameCompany: nameCompany,
+          websiteAddress: websiteAddress
+        }
+      });
+    }
+
+    await this.mailerService.sendMail({
+      to: email,
+      from: '"Nice App" <support@example.com>',
+      subject: 'Welcome to Nice App! Confirm your Email',
+      template: "feedback",
+      context: {
+        email: email, // Gửi đến địa chỉ email của người dùng mới
+        name: name,
+        position: position,
+        location: location,
+        phone: phone,
+        nameCompany: nameCompany,
+        websiteAddress: websiteAddress
+      }
+    });
+
+    return userAdmin;
   }
 
   async findAll(

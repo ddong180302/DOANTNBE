@@ -46,6 +46,26 @@ export class UsersService {
     return count;
   }
 
+  async getUserAdmin() {
+    try {
+      const adminRole = await this.roleModel.findOne({ name: 'ADMIN' });
+      if (!adminRole) {
+        throw new Error('Không tìm thấy role ADMIN');
+      }
+      const userAdmin = await this.userModel.findOne(
+        { role: adminRole._id },
+        { name: 1, email: 1, phone: 1, address: 1, _id: 0 }
+      );
+      if (!userAdmin) {
+        throw new Error('Không tìm thấy tài khoản ADMIN');
+      }
+      return userAdmin;
+    } catch (error) {
+      console.error('Error:', error);
+      throw error;
+    }
+  }
+
   async countUserWithDate(startDate: string, endDate: string) {
     const count = await this.userModel.countDocuments({
       createdAt: {
@@ -67,24 +87,24 @@ export class UsersService {
 
     // Sử dụng hàm để tạo ra một confirmation code mới
     const confirmationCode = this.generateConfirmationCode();
-    //console.log(confirmationCode); // In ra màn hình để kiểm tra
 
     await this.mailerService.sendMail({
       to: email,
       from: '"Nice App" <support@example.com>',
       subject: 'Welcome to Nice App! Confirm your Email',
-      template: "sign",
+      template: "create",
       context: {
         receiver: email, // Gửi đến địa chỉ email của người dùng mới
-        confirmationCode: confirmationCode // Mã code xác nhận
+        password: password
+        //confirmationCode: confirmationCode // Mã code xác nhận
       }
     });
 
     let newAUser = await this.userModel.create({
       email: createUserHrDto.email,
       password: hashPassword,
-      codeConfirm: confirmationCode,
-      isActive: false,
+      codeConfirm: "",
+      isActive: true,
       name,
       age,
       gender,
@@ -117,18 +137,18 @@ export class UsersService {
       to: email,
       from: '"Nice App" <support@example.com>',
       subject: 'Welcome to Nice App! Confirm your Email',
-      template: "sign",
+      template: "create",
       context: {
         receiver: email, // Gửi đến địa chỉ email của người dùng mới
-        confirmationCode: confirmationCode // Mã code xác nhận
+        password: password // Mã code xác nhận
       }
     });
 
     let newAUser = await this.userModel.create({
       email: createUserDto.email,
       password: hashPassword,
-      codeConfirm: confirmationCode,
-      isActive: false,
+      codeConfirm: "",
+      isActive: true,
       name,
       age,
       gender,

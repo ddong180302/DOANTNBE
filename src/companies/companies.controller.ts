@@ -16,6 +16,14 @@ export class CompaniesController {
     return this.companiesService.create(createCompanyDto, user);
   }
 
+  @Post('contact')
+  @Public()
+  @ResponseMessage("impormation contact!")
+  contact(@Body() requestBody: any) {
+    return this.companiesService.contact(requestBody);
+  }
+
+
   @Public()
   @Get()
   @ResponseMessage("Fetch List Companies with paginate!")

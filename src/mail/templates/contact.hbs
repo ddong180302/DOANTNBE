@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Thông báo có người dùng mới đăng ký liên hệ</title>
+    <meta charset="UTF-8">
+</head>
+
+<body style="font-family: Arial, sans-serif;">
+    <table style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+        <tr>
+            <td align="center">
+                <table style="background-color: white; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
+                    <tr>
+                        <td colspan="2">
+                            <div style="text-align: center; font-size: 24px; font-weight: bold;">Thông báo có người dùng
+                                mới đăng ký liên hệ</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <div style="text-align: left;">
+                                <p style="font-size: 16px; margin-bottom: 10px;">Xin chào Admin,</p>
+                                <p style="font-size: 16px;">Có một người dùng mới vừa gửi thông tin liên hệ và đăng ký
+                                    tài khoản:</p>
+                                <ul style="font-size: 16px;">
+                                    <li><strong>Họ và tên:</strong> {{name}}</li>
+                                    <li><strong>Chức vụ:</strong> {{position}}</li>
+                                    <li><strong>Email:</strong> {{email}}</li>
+                                    <li><strong>Địa chỉ:</strong> {{location}}</li>
+                                    <li><strong>Số điện thoại:</strong> {{phone}}</li>
+                                    <li><strong>Công ty:</strong> {{nameCompany}}</li>
+                                    <li><strong>Website Công ty:</strong> <a href="{{websiteAddress}}"
+                                            target="_blank">{{websiteAddress}}</a></li>
+                                </ul>
+                                <p style="font-size: 16px;">Vui lòng kiểm tra thông tin và xác nhận đăng ký.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <div style="padding-top: 20px; text-align: left; font-size: 16px;">Trân trọng,</div>
+                            <div style="text-align: left; font-size: 16px;">Nice Job Team</div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

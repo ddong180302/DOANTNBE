@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, CreateUserHrDto } from './dto/create-user.dto';
 import { UpdateInforUserDto, UpdateUserDto, UpdateUserHrDto } from './dto/update-user.dto';
@@ -52,11 +52,19 @@ export class UsersController {
   }
 
   @Public()
+  @Post('getUserAdmin')
+  @ResponseMessage("count user!")
+  getUserAdmin() {
+    return this.usersService.getUserAdmin();
+  }
+
+  @Public()
   @Post('count')
   @ResponseMessage("count user!")
   countUser() {
     return this.usersService.countUser();
   }
+
 
 
 
@@ -69,8 +77,6 @@ export class UsersController {
   ) {
     return this.usersService.countUserWithDate(startDate, endDate);
   }
-
-
 
   @Post('by-user')
   @ResponseMessage("Fetch user by user!")
