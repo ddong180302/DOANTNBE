@@ -8,7 +8,6 @@ import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import mongoose, { ObjectId } from 'mongoose';
 import aqp from 'api-query-params';
 import { User, UserDocument } from 'src/users/schemas/user.schema';
-import cron from 'node-cron';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()

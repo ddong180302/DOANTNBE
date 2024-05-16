@@ -12,3 +12,4 @@ import { User, UserSchema } from 'src/users/schemas/user.schema';
   exports: [JobsService]
 })
 export class JobsModule { }
+
