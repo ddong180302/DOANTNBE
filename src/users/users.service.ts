@@ -173,7 +173,6 @@ export class UsersService {
     delete filter.current;
     delete filter.pageSize;
     let offset = (currentPage - 1) * (+limit);
-    console.log("check: ", sort)
     let defaultLimit = +limit ? +limit : 10;
     const totalItems = (await this.userModel.find(filter)).length;
     const totalPages = Math.ceil(totalItems / defaultLimit);

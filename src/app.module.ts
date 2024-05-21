@@ -21,6 +21,7 @@ import { HealthModule } from './health/health.module';
 import { SkillsModule } from './skills/skills.module';
 import { ChatsModule } from './chat/chats.module';
 import { MessagesModule } from './message/messages.module';
+import { NotificationModule } from './notification/notification.module';
 @Module({
   imports:
     [
@@ -58,6 +59,7 @@ import { MessagesModule } from './message/messages.module';
       SkillsModule,
       ChatsModule,
       MessagesModule,
+      NotificationModule,
 
     ],
   controllers: [AppController],

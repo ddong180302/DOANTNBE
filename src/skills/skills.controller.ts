@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestj
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
-import { ResponseMessage, User } from 'src/decorator/customize';
+import { Public, ResponseMessage, User } from 'src/decorator/customize';
 import { ApiTags } from '@nestjs/swagger';
 import { IUser } from '../users/users.interface';
 
@@ -17,6 +17,7 @@ export class SkillsController {
     return this.skillsService.create(createSkillDto, user);
   }
 
+  @Public()
   @Get()
   @ResponseMessage("Fetch list skill with paginate!")
   findAll(
