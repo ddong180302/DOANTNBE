@@ -255,7 +255,11 @@ export class UsersService {
   }
 
   async update(updateUserDto: UpdateUserDto, user: IUser) {
+    const { email, name, age, gender, address, phone, company } = updateUserDto;
+
+    console.log("check: ", updateUserDto)
     return await this.userModel.updateOne({ _id: updateUserDto._id }, {
+
       ...updateUserDto,
       updatedBy: {
         _id: user._id,
@@ -265,7 +269,6 @@ export class UsersService {
   }
 
   async updateInforByUser(updateInforUserDto: UpdateInforUserDto, user: IUser) {
-    //const { email, name, age, gender, address, phone } = updateInforUserDto;
     return await this.userModel.updateOne({ _id: updateInforUserDto._id }, {
       ...updateInforUserDto,
       updatedBy: {
